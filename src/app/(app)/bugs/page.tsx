@@ -1,6 +1,10 @@
+
 "use client"
 
 import * as React from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Table,
   TableBody,
@@ -20,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ListFilter, PlusCircle, Search } from 'lucide-react';
-import { bugs, users, categories as allCategories } from '@/lib/data';
+import { bugs as initialBugs, users, categories as allCategories } from '@/lib/data';
 import type { Bug, BugStatus, BugPriority } from '@/lib/types';
 import { BugStatusBadge } from '@/components/bug-status-badge';
 import { BugPriorityIcon } from '@/components/bug-priority-icon';
@@ -36,14 +40,66 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 
-function CreateBugDialog() {
+const bugFormSchema = z.object({
+  title: z.string().min(1, "Title is required."),
+  description: z.string().min(1, "Description is required."),
+  priority: z.enum(["Low", "Medium", "High", "Critical"], { required_error: "Priority is required." }),
+  category: z.string().min(1, "Category is required."),
+});
+
+type BugFormValues = z.infer<typeof bugFormSchema>;
+
+
+function CreateBugDialog({ onBugCreated }: { onBugCreated: (newBug: Bug) => void }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const { toast } = useToast();
+
+    const form = useForm<BugFormValues>({
+        resolver: zodResolver(bugFormSchema),
+        defaultValues: {
+            title: "",
+            description: "",
+        },
+    });
+
+    const onSubmit = (data: BugFormValues) => {
+        const newBug: Bug = {
+            id: `bug-${Math.floor(Math.random() * 900) + 107}`, // simple unique id
+            title: data.title,
+            description: data.description,
+            priority: data.priority as BugPriority,
+            category: data.category,
+            status: 'New',
+            reporterId: users[0].id, // Assume current user is the first user
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        };
+        onBugCreated(newBug);
+        toast({
+          title: "Bug Report Created",
+          description: `Bug #${newBug.id.split('-')[1]} has been successfully submitted.`,
+        });
+        form.reset();
+        setIsOpen(false);
+    }
+
     return (
-        <Dialog>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button size="sm" className="h-8 gap-1">
                     <PlusCircle className="h-3.5 w-3.5" />
@@ -57,55 +113,98 @@ function CreateBugDialog() {
                         Please provide as much detail as possible.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="title">Title</Label>
-                        <Input id="title" placeholder="e.g., Login button not working" />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea id="description" placeholder="Describe the bug in detail..." />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2">
-                             <Label htmlFor="priority">Priority</Label>
-                            <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Low">Low</SelectItem>
-                                    <SelectItem value="Medium">Medium</SelectItem>
-                                    <SelectItem value="High">High</SelectItem>
-                                    <SelectItem value="Critical">Critical</SelectItem>
-                                </SelectContent>
-                            </Select>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
+                        <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Title</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Login button not working" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="Describe the bug in detail..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                       <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="priority"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Priority</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select priority" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Low">Low</SelectItem>
+                                                <SelectItem value="Medium">Medium</SelectItem>
+                                                <SelectItem value="High">High</SelectItem>
+                                                <SelectItem value="Critical">Critical</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="category"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Category</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select category" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {allCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="category">Category</Label>
-                            <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {allCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button type="submit">Submit Report</Button>
-                </DialogFooter>
+                        <DialogFooter>
+                            <Button type="submit">Submit Report</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
             </DialogContent>
         </Dialog>
     )
 }
 
 export default function BugsPage() {
+  const [bugs, setBugs] = React.useState<Bug[]>(initialBugs);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilters, setStatusFilters] = React.useState<BugStatus[]>([]);
   const [priorityFilters, setPriorityFilters] = React.useState<BugPriority[]>([]);
+
+  const handleBugCreated = (newBug: Bug) => {
+    setBugs(prevBugs => [newBug, ...prevBugs]);
+  };
 
   const filteredBugs = bugs.filter((bug) => {
     const searchMatch = bug.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,7 +224,7 @@ export default function BugsPage() {
                 <CardTitle>Bugs</CardTitle>
                 <CardDescription>View, manage, and track all reported bugs.</CardDescription>
             </div>
-            <CreateBugDialog />
+            <CreateBugDialog onBugCreated={handleBugCreated} />
         </div>
         <div className="mt-4 flex items-center gap-2">
             <div className="relative w-full">
