@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ListFilter, PlusCircle, Search } from 'lucide-react';
-import { bugs as initialBugs, users, categories as allCategories } from '@/lib/data';
+import { users, categories as allCategories } from '@/lib/data';
 import type { Bug, BugStatus, BugPriority } from '@/lib/types';
 import { BugStatusBadge } from '@/components/bug-status-badge';
 import { BugPriorityIcon } from '@/components/bug-priority-icon';
@@ -53,6 +53,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useBugs } from '@/hooks/use-bugs';
 
 
 const bugFormSchema = z.object({
@@ -197,13 +198,13 @@ function CreateBugDialog({ onBugCreated }: { onBugCreated: (newBug: Bug) => void
 }
 
 export default function BugsPage() {
-  const [bugs, setBugs] = React.useState<Bug[]>(initialBugs);
+  const { bugs, addBug } = useBugs();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilters, setStatusFilters] = React.useState<BugStatus[]>([]);
   const [priorityFilters, setPriorityFilters] = React.useState<BugPriority[]>([]);
 
   const handleBugCreated = (newBug: Bug) => {
-    setBugs(prevBugs => [newBug, ...prevBugs]);
+    addBug(newBug);
   };
 
   const filteredBugs = bugs.filter((bug) => {

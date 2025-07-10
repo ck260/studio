@@ -1,4 +1,9 @@
-import { bugs, users, comments as allComments } from '@/lib/data';
+
+"use client"
+
+import * as React from 'react';
+import { useBugs, getBugs } from '@/hooks/use-bugs';
+import { users, comments as allComments } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,17 +18,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import type { BugStatus, BugPriority } from '@/lib/types';
 
+
+// This page can be rendered statically, as we can get the bug data at build time.
+// However, to see updates from other pages, we need to use the client-side hook.
+// A better solution would involve server-side data fetching and revalidation.
 export default function BugDetailsPage({ params }: { params: { id: string } }) {
+  const { bugs } = useBugs();
   const bug = bugs.find((b) => b.id === params.id);
+
   if (!bug) {
-    notFound();
+    // Fallback for initial load or if bug not found in client state
+    const staticBugs = getBugs();
+    const staticBug = staticBugs.find((b) => b.id === params.id);
+    if (!staticBug) {
+      notFound();
+    }
+    // This is not ideal, but it makes the page work on direct navigation.
+    // In a real app, you would fetch this from a server.
+    return <BugDetailsContent bug={staticBug} />;
   }
 
-  const reporter = users.find((u) => u.id === bug.reporterId);
-  const assignee = users.find((u) => u.id === bug.assigneeId);
-  const comments = allComments.filter((c) => c.bugId === bug.id);
+  return <BugDetailsContent bug={bug} />;
+}
 
-  return (
+function BugDetailsContent({ bug }: { bug: import('@/lib/types').Bug }) {
+    const reporter = users.find((u) => u.id === bug.reporterId);
+    const assignee = users.find((u) => u.id === bug.assigneeId);
+    const comments = allComments.filter((c) => c.bugId === bug.id);
+
+    return (
     <div className="space-y-6">
        <div>
          <Button variant="ghost" asChild className="mb-4">
@@ -129,3 +152,4 @@ export default function BugDetailsPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
+

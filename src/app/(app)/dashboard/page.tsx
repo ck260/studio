@@ -1,3 +1,7 @@
+
+"use client"
+
+import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -14,7 +18,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Bug, CircleDot, Loader, CheckCircle } from 'lucide-react';
-import { bugs, users } from '@/lib/data';
+import { useBugs } from '@/hooks/use-bugs';
+import { users } from '@/lib/data';
 import { BugStatusBadge } from '@/components/bug-status-badge';
 import { BugPriorityIcon } from '@/components/bug-priority-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -22,6 +27,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
+  const { bugs } = useBugs();
+
   const stats = {
     new: bugs.filter((b) => b.status === 'New').length,
     inProgress: bugs.filter((b) => b.status === 'In Progress').length,
