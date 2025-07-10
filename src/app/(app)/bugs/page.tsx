@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -43,17 +43,15 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useBugs } from '@/hooks/use-bugs';
+import { useBugs, useBugMutations } from '@/hooks/use-bugs';
 
 
 const bugFormSchema = z.object({
@@ -198,7 +196,8 @@ function CreateBugDialog({ onBugCreated }: { onBugCreated: (newBug: Bug) => void
 }
 
 export default function BugsPage() {
-  const { bugs, addBug } = useBugs();
+  const { bugs } = useBugs();
+  const { addBug } = useBugMutations();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilters, setStatusFilters] = React.useState<BugStatus[]>([]);
   const [priorityFilters, setPriorityFilters] = React.useState<BugPriority[]>([]);

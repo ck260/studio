@@ -2,10 +2,10 @@
 "use client"
 
 import * as React from 'react';
-import { useBugs, getBugs } from '@/hooks/use-bugs';
+import { useBugs, getBugs, useBugMutations } from '@/hooks/use-bugs';
 import { users, comments as allComments } from '@/lib/data';
 import { notFound } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
@@ -16,20 +16,21 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { BugStatus, BugPriority } from '@/lib/types';
+import type { Bug, BugStatus, BugPriority } from '@/lib/types';
 
 
 // This page can be rendered statically, as we can get the bug data at build time.
 // However, to see updates from other pages, we need to use the client-side hook.
 // A better solution would involve server-side data fetching and revalidation.
 export default function BugDetailsPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const { bugs } = useBugs();
-  const bug = bugs.find((b) => b.id === params.id);
+  const bug = bugs.find((b) => b.id === id);
 
   if (!bug) {
     // Fallback for initial load or if bug not found in client state
     const staticBugs = getBugs();
-    const staticBug = staticBugs.find((b) => b.id === params.id);
+    const staticBug = staticBugs.find((b) => b.id === id);
     if (!staticBug) {
       notFound();
     }
@@ -41,10 +42,23 @@ export default function BugDetailsPage({ params }: { params: { id: string } }) {
   return <BugDetailsContent bug={bug} />;
 }
 
-function BugDetailsContent({ bug }: { bug: import('@/lib/types').Bug }) {
+function BugDetailsContent({ bug }: { bug: Bug }) {
+    const { updateBug } = useBugMutations();
     const reporter = users.find((u) => u.id === bug.reporterId);
     const assignee = users.find((u) => u.id === bug.assigneeId);
     const comments = allComments.filter((c) => c.bugId === bug.id);
+
+    const handleStatusChange = (newStatus: BugStatus) => {
+        updateBug(bug.id, { status: newStatus });
+    }
+
+    const handlePriorityChange = (newPriority: BugPriority) => {
+        updateBug(bug.id, { priority: newPriority });
+    }
+
+    const handleAssigneeChange = (newAssigneeId: string) => {
+        updateBug(bug.id, { assigneeId: newAssigneeId });
+    }
 
     return (
     <div className="space-y-6">
@@ -111,22 +125,48 @@ function BugDetailsContent({ bug }: { bug: import('@/lib/types').Bug }) {
                     <CardTitle>Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Status</span>
-                        <BugStatusBadge status={bug.status} />
+                    <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select value={bug.status} onValueChange={handleStatusChange}>
+                            <SelectTrigger>
+                                <SelectValue>
+                                    <BugStatusBadge status={bug.status} />
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {(['New', 'In Progress', 'Fixed', 'Closed'] as BugStatus[]).map(status => (
+                                    <SelectItem key={status} value={status}>
+                                        <BugStatusBadge status={status} />
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                     <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Priority</span>
-                        <BugPriorityIcon priority={bug.priority} showLabel />
+                     <div className="space-y-2">
+                        <Label>Priority</Label>
+                        <Select value={bug.priority} onValueChange={handlePriorityChange}>
+                            <SelectTrigger>
+                                <SelectValue>
+                                    <BugPriorityIcon priority={bug.priority} showLabel />
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {(['Low', 'Medium', 'High', 'Critical'] as BugPriority[]).map(priority => (
+                                    <SelectItem key={priority} value={priority}>
+                                        <BugPriorityIcon priority={priority} showLabel />
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
-                     <div className="flex justify-between items-center">
+                     <div className="flex justify-between items-center pt-2">
                         <span className="text-muted-foreground">Category</span>
                         <span className="font-medium">{bug.category}</span>
                     </div>
                     <Separator />
                      <div className="space-y-2">
                         <Label>Assignee</Label>
-                        <Select defaultValue={assignee?.id}>
+                        <Select value={assignee?.id} onValueChange={handleAssigneeChange}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Unassigned" />
                             </SelectTrigger>
@@ -152,4 +192,3 @@ function BugDetailsContent({ bug }: { bug: import('@/lib/types').Bug }) {
     </div>
   );
 }
-

@@ -10,10 +10,14 @@ import type { Bug } from '@/lib/types';
 let bugsStore: Bug[] = initialBugs;
 let listeners: React.Dispatch<React.SetStateAction<Bug[]>>[] = [];
 
+const broadcastChanges = () => {
+    listeners.forEach(l => l(bugsStore));
+}
+
 const useBugsStore = () => {
     const setBugs = React.useCallback((updater: React.SetStateAction<Bug[]>) => {
         bugsStore = typeof updater === 'function' ? updater(bugsStore) : updater;
-        listeners.forEach(l => l(bugsStore));
+        broadcastChanges();
     }, []);
 
     return [bugsStore, setBugs] as const;
@@ -29,12 +33,23 @@ export const useBugs = () => {
         }
     }, []);
 
+    return {bugs};
+}
+
+export const useBugMutations = () => {
     const addBug = (newBug: Bug) => {
         bugsStore = [newBug, ...bugsStore];
-        listeners.forEach(l => l(bugsStore));
+        broadcastChanges();
     }
+    
+    const updateBug = (bugId: string, updates: Partial<Bug>) => {
+        bugsStore = bugsStore.map(bug => 
+            bug.id === bugId ? { ...bug, ...updates, updatedAt: new Date().toISOString() } : bug
+        );
+        broadcastChanges();
+    };
 
-    return {bugs, addBug};
+    return { addBug, updateBug };
 }
 
 export const getBugs = () => {
