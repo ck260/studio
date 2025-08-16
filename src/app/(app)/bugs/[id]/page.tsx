@@ -3,7 +3,8 @@
 
 import * as React from 'react';
 import { useBugs, getBugs, useBugMutations } from '@/hooks/use-bugs';
-import { users, comments as allComments } from '@/lib/data';
+import { useComments, useCommentMutations } from '@/hooks/use-comments';
+import { users } from '@/lib/data';
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,14 +17,15 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { Bug, BugStatus, BugPriority } from '@/lib/types';
+import type { Bug, BugStatus, BugPriority, Comment } from '@/lib/types';
 
 
 // This page can be rendered statically, as we can get the bug data at build time.
 // However, to see updates from other pages, we need to use the client-side hook.
 // A better solution would involve server-side data fetching and revalidation.
 export default function BugDetailsPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+    const { id } = React.use(params); // ✅ Future-safe
+
   const { bugs } = useBugs();
   const bug = bugs.find((b) => b.id === id);
 
@@ -44,9 +46,13 @@ export default function BugDetailsPage({ params }: { params: { id: string } }) {
 
 function BugDetailsContent({ bug }: { bug: Bug }) {
     const { updateBug } = useBugMutations();
+    const { comments } = useComments();
+    const { addComment } = useCommentMutations();
+    const [newComment, setNewComment] = React.useState('');
+
     const reporter = users.find((u) => u.id === bug.reporterId);
     const assignee = users.find((u) => u.id === bug.assigneeId);
-    const comments = allComments.filter((c) => c.bugId === bug.id);
+    const bugComments = comments.filter((c) => c.bugId === bug.id);
 
     const handleStatusChange = (newStatus: BugStatus) => {
         updateBug(bug.id, { status: newStatus });
@@ -58,6 +64,21 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
 
     const handleAssigneeChange = (newAssigneeId: string) => {
         updateBug(bug.id, { assigneeId: newAssigneeId });
+    }
+
+    const handleCommentSubmit = () => {
+        if (!newComment.trim()) return;
+
+        const newCommentObject: Comment = {
+            id: `comment-${Date.now()}`,
+            bugId: bug.id,
+            authorId: users[0].id, // Assume current user
+            content: newComment,
+            createdAt: new Date().toISOString(),
+        };
+
+        addComment(newCommentObject);
+        setNewComment('');
     }
 
     return (
@@ -86,7 +107,7 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
                     <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5"/> Comments</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {comments.map(comment => {
+                    {bugComments.map(comment => {
                         const author = users.find(u => u.id === comment.authorId);
                         return (
                             <div key={comment.id} className="flex gap-3">
@@ -111,8 +132,12 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
                             <AvatarFallback>{users[0]?.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                          <div className="flex-1 space-y-2">
-                             <Textarea placeholder="Add a comment..."/>
-                             <Button>Submit</Button>
+                             <Textarea 
+                                placeholder="Add a comment..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                             />
+                             <Button onClick={handleCommentSubmit}>Submit</Button>
                          </div>
                     </div>
                 </CardContent>
