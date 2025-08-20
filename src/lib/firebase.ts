@@ -1,17 +1,17 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore }s from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID"
+  "projectId": "bugsmash-96rb8",
+  "appId": "1:828716915274:web:60ce8a3f7b5dc74711e4b3",
+  "storageBucket": "bugsmash-96rb8.firebasestorage.app",
+  "apiKey": "AIzaSyCDrYTXJFr0FuXZmMNsYNLzV_7hAZ109bw",
+  "authDomain": "bugsmash-96rb8.firebaseapp.com",
+  "messagingSenderId": "828716915274"
 };
 
 // Initialize Firebase

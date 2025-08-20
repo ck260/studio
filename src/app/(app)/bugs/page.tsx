@@ -52,6 +52,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useBugs, useBugMutations } from '@/hooks/use-bugs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const bugFormSchema = z.object({
@@ -64,9 +65,10 @@ const bugFormSchema = z.object({
 type BugFormValues = z.infer<typeof bugFormSchema>;
 
 
-function CreateBugDialog({ onBugCreated }: { onBugCreated: (newBug: Bug) => void }) {
+function CreateBugDialog() {
     const [isOpen, setIsOpen] = React.useState(false);
     const { toast } = useToast();
+    const { addBug } = useBugMutations();
 
     const form = useForm<BugFormValues>({
         resolver: zodResolver(bugFormSchema),
@@ -77,21 +79,18 @@ function CreateBugDialog({ onBugCreated }: { onBugCreated: (newBug: Bug) => void
     });
 
     const onSubmit = (data: BugFormValues) => {
-        const newBug: Bug = {
-            id: `bug-${Math.floor(Math.random() * 900) + 107}`, // simple unique id
+        const newBug = {
             title: data.title,
             description: data.description,
             priority: data.priority as BugPriority,
             category: data.category,
-            status: 'New',
+            status: 'New' as BugStatus,
             reporterId: users[0].id, // Assume current user is the first user
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
         };
-        onBugCreated(newBug);
+        addBug(newBug);
         toast({
           title: "Bug Report Created",
-          description: `Bug #${newBug.id.split('-')[1]} has been successfully submitted.`,
+          description: `The bug has been successfully submitted.`,
         });
         form.reset();
         setIsOpen(false);
@@ -195,27 +194,80 @@ function CreateBugDialog({ onBugCreated }: { onBugCreated: (newBug: Bug) => void
     )
 }
 
+function BugsTable({ bugs }: { bugs: Bug[] }) {
+    const getUser = (id?: string) => users.find((u) => u.id === id);
+    
+    return (
+        <div className="border rounded-md">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Bug</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden md:table-cell">Priority</TableHead>
+                    <TableHead className="hidden md:table-cell">Assignee</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {bugs.map((bug) => {
+                    const assignee = getUser(bug.assigneeId);
+                    return (
+                        <TableRow key={bug.id}>
+                        <TableCell>
+                            <div className="font-medium hover:underline">
+                                <Link href={`/bugs/${bug.id}`}>{bug.title}</Link>
+                            </div>
+                            <div className="text-sm text-muted-foreground">#{bug.id.substring(0,6)}</div>
+                        </TableCell>
+                        <TableCell>
+                            <BugStatusBadge status={bug.status} />
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                            <BugPriorityIcon priority={bug.priority} />
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                            {assignee ? (
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                <AvatarImage src={assignee.avatarUrl} />
+                                <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span>{assignee.name}</span>
+                            </div>
+                            ) : (
+                            <span className="text-muted-foreground">Unassigned</span>
+                            )}
+                        </TableCell>
+                         <TableCell className="text-right">
+                           <Button variant="outline" size="sm" asChild>
+                                <Link href={`/bugs/${bug.id}`}>View Details</Link>
+                            </Button>
+                        </TableCell>
+                        </TableRow>
+                    );
+                    })}
+                </TableBody>
+            </Table>
+        </div>
+    )
+}
+
+
 export default function BugsPage() {
-  const { bugs } = useBugs();
-  const { addBug } = useBugMutations();
+  const { bugs, loading } = useBugs();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [statusFilters, setStatusFilters] = React.useState<BugStatus[]>([]);
   const [priorityFilters, setPriorityFilters] = React.useState<BugPriority[]>([]);
 
-  const handleBugCreated = (newBug: Bug) => {
-    addBug(newBug);
-  };
-
   const filteredBugs = bugs.filter((bug) => {
     const searchMatch = bug.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        bug.id.toLowerCase().includes(searchTerm.toLowerCase());
+                        (bug.id && bug.id.toLowerCase().includes(searchTerm.toLowerCase()));
     const statusMatch = statusFilters.length === 0 || statusFilters.includes(bug.status);
     const priorityMatch = priorityFilters.length === 0 || priorityFilters.includes(bug.priority);
     return searchMatch && statusMatch && priorityMatch;
   });
-
-  const getUser = (id?: string) => users.find((u) => u.id === id);
-
+  
   return (
     <Card>
       <CardHeader>
@@ -224,7 +276,7 @@ export default function BugsPage() {
                 <CardTitle>Bugs</CardTitle>
                 <CardDescription>View, manage, and track all reported bugs.</CardDescription>
             </div>
-            <CreateBugDialog onBugCreated={handleBugCreated} />
+            <CreateBugDialog />
         </div>
         <div className="mt-4 flex items-center gap-2">
             <div className="relative w-full">
@@ -280,58 +332,13 @@ export default function BugsPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md">
-            <Table>
-            <TableHeader>
-                <TableRow>
-                <TableHead>Bug</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Priority</TableHead>
-                <TableHead className="hidden md:table-cell">Assignee</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {filteredBugs.map((bug) => {
-                const assignee = getUser(bug.assigneeId);
-                return (
-                    <TableRow key={bug.id}>
-                    <TableCell>
-                        <div className="font-medium hover:underline">
-                            <Link href={`/bugs/${bug.id}`}>{bug.title}</Link>
-                        </div>
-                        <div className="text-sm text-muted-foreground">#{bug.id.split('-')[1]}</div>
-                    </TableCell>
-                    <TableCell>
-                        <BugStatusBadge status={bug.status} />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                        <BugPriorityIcon priority={bug.priority} />
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                        {assignee ? (
-                        <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                            <AvatarImage src={assignee.avatarUrl} />
-                            <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span>{assignee.name}</span>
-                        </div>
-                        ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
-                        )}
-                    </TableCell>
-                     <TableCell className="text-right">
-                       <Button variant="outline" size="sm" asChild>
-                            <Link href={`/bugs/${bug.id}`}>View Details</Link>
-                        </Button>
-                    </TableCell>
-                    </TableRow>
-                );
-                })}
-            </TableBody>
-            </Table>
-        </div>
+        {loading ? (
+             <div className="space-y-2">
+                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+        ) : (
+            <BugsTable bugs={filteredBugs} />
+        )}
       </CardContent>
     </Card>
   );

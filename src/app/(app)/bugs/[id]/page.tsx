@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from 'react';
-import { useBugs, getBugs, useBugMutations } from '@/hooks/use-bugs';
+import { useBugs, useBugMutations } from '@/hooks/use-bugs';
 import { useComments, useCommentMutations } from '@/hooks/use-comments';
 import { users } from '@/lib/data';
 import { notFound } from 'next/navigation';
@@ -20,25 +20,23 @@ import { Label } from '@/components/ui/label';
 import type { Bug, BugStatus, BugPriority, Comment } from '@/lib/types';
 
 
-// This page can be rendered statically, as we can get the bug data at build time.
-// However, to see updates from other pages, we need to use the client-side hook.
-// A better solution would involve server-side data fetching and revalidation.
 export default function BugDetailsPage({ params }: { params: { id: string } }) {
-    const { id } = React.use(params); // ✅ Future-safe
-
+  const { id } = params;
   const { bugs } = useBugs();
   const bug = bugs.find((b) => b.id === id);
 
   if (!bug) {
-    // Fallback for initial load or if bug not found in client state
-    const staticBugs = getBugs();
-    const staticBug = staticBugs.find((b) => b.id === id);
-    if (!staticBug) {
-      notFound();
-    }
-    // This is not ideal, but it makes the page work on direct navigation.
-    // In a real app, you would fetch this from a server.
-    return <BugDetailsContent bug={staticBug} />;
+      // Data might still be loading, or bug not found.
+      // A loading skeleton or a "not found" message could be rendered here.
+      // For now, we'll just show a minimal state. A full app would handle this more gracefully.
+    return (
+        <div>
+         <Button variant="ghost" asChild className="mb-4">
+             <Link href="/bugs"><ArrowLeft className="mr-2 h-4 w-4" />Back to all bugs</Link>
+         </Button>
+         <p>Loading bug details...</p>
+        </div>
+    )
   }
 
   return <BugDetailsContent bug={bug} />;
@@ -46,14 +44,13 @@ export default function BugDetailsPage({ params }: { params: { id: string } }) {
 
 function BugDetailsContent({ bug }: { bug: Bug }) {
     const { updateBug } = useBugMutations();
-    const { comments } = useComments();
+    const { comments } = useComments(bug.id);
     const { addComment } = useCommentMutations();
     const [newComment, setNewComment] = React.useState('');
 
     const reporter = users.find((u) => u.id === bug.reporterId);
     const assignee = users.find((u) => u.id === bug.assigneeId);
-    const bugComments = comments.filter((c) => c.bugId === bug.id);
-
+    
     const handleStatusChange = (newStatus: BugStatus) => {
         updateBug(bug.id, { status: newStatus });
     }
@@ -66,18 +63,16 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
         updateBug(bug.id, { assigneeId: newAssigneeId });
     }
 
-    const handleCommentSubmit = () => {
+    const handleCommentSubmit = async () => {
         if (!newComment.trim()) return;
 
-        const newCommentObject: Comment = {
-            id: `comment-${Date.now()}`,
+        const newCommentObject = {
             bugId: bug.id,
             authorId: users[0].id, // Assume current user
             content: newComment,
-            createdAt: new Date().toISOString(),
         };
 
-        addComment(newCommentObject);
+        await addComment(newCommentObject);
         setNewComment('');
     }
 
@@ -88,7 +83,7 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
              <Link href="/bugs"><ArrowLeft className="mr-2 h-4 w-4" />Back to all bugs</Link>
          </Button>
         <h1 className="text-3xl font-bold font-headline">{bug.title}</h1>
-        <p className="text-muted-foreground">Bug #{bug.id.split('-')[1]} opened on {new Date(bug.createdAt).toLocaleDateString()}</p>
+        <p className="text-muted-foreground">Bug #{bug.id.substring(0,6)} opened on {new Date(bug.createdAt).toLocaleDateString()}</p>
       </div>
       
       <div className="grid md:grid-cols-3 gap-6">
@@ -107,7 +102,7 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
                     <CardTitle className="flex items-center gap-2"><MessageSquare className="h-5 w-5"/> Comments</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {bugComments.map(comment => {
+                    {comments.map(comment => {
                         const author = users.find(u => u.id === comment.authorId);
                         return (
                             <div key={comment.id} className="flex gap-3">

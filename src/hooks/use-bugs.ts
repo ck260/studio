@@ -2,56 +2,66 @@
 "use client"
 
 import * as React from 'react';
+import { collection, onSnapshot, addDoc, updateDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { bugs as initialBugs } from '@/lib/data';
 import type { Bug } from '@/lib/types';
 
-// This is a simple in-memory store.
-// In a real app, you would use a state management library or server-side state.
-let bugsStore: Bug[] = initialBugs;
-let listeners: React.Dispatch<React.SetStateAction<Bug[]>>[] = [];
-
-const broadcastChanges = () => {
-    listeners.forEach(l => l(bugsStore));
-}
-
-const useBugsStore = () => {
-    const setBugs = React.useCallback((updater: React.SetStateAction<Bug[]>) => {
-        bugsStore = typeof updater === 'function' ? updater(bugsStore) : updater;
-        broadcastChanges();
-    }, []);
-
-    return [bugsStore, setBugs] as const;
-}
-
+// This hook now fetches and subscribes to bugs from Firestore.
 export const useBugs = () => {
-    const [bugs, setBugs] = React.useState(bugsStore);
+    const [bugs, setBugs] = React.useState<Bug[]>([]);
+    const [loading, setLoading] = React.useState(true);
 
     React.useEffect(() => {
-        listeners.push(setBugs);
-        return () => {
-            listeners = listeners.filter(l => l !== setBugs);
-        }
+        const bugsCollectionRef = collection(db, 'bugs');
+        
+        // Set up a real-time listener.
+        const unsubscribe = onSnapshot(bugsCollectionRef, (snapshot) => {
+            const bugsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Bug));
+            setBugs(bugsData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching bugs: ", error);
+            // If Firestore is empty, populate with initial data.
+            // This is useful for first-time setup.
+            console.log("Populating database with initial data...");
+            const bugsCollection = collection(db, "bugs");
+            initialBugs.forEach(bug => {
+                const { id, ...bugData } = bug; // Firestore generates its own ID
+                addDoc(bugsCollection, bugData);
+            });
+            setLoading(false);
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
     }, []);
 
-    return {bugs};
+    return { bugs, loading };
 }
 
+// This hook provides functions to mutate bug data in Firestore.
 export const useBugMutations = () => {
-    const addBug = (newBug: Bug) => {
-        bugsStore = [newBug, ...bugsStore];
-        broadcastChanges();
-    }
+    const addBug = async (newBug: Omit<Bug, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const bugsCollection = collection(db, "bugs");
+        const bugWithTimestamps = {
+            ...newBug,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        }
+        await addDoc(bugsCollection, bugWithTimestamps);
+    };
     
-    const updateBug = (bugId: string, updates: Partial<Bug>) => {
-        bugsStore = bugsStore.map(bug => 
-            bug.id === bugId ? { ...bug, ...updates, updatedAt: new Date().toISOString() } : bug
-        );
-        broadcastChanges();
+    const updateBug = async (bugId: string, updates: Partial<Bug>) => {
+        const bugDocRef = doc(db, 'bugs', bugId);
+        const updatesWithTimestamp = {
+            ...updates,
+            updatedAt: new Date().toISOString(),
+        }
+        await updateDoc(bugDocRef, updatesWithTimestamp);
     };
 
     return { addBug, updateBug };
 }
 
-export const getBugs = () => {
-    return bugsStore;
-}
+// getBugs is no longer needed as we fetch from Firestore.

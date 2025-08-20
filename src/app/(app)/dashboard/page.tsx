@@ -25,9 +25,10 @@ import { BugPriorityIcon } from '@/components/bug-priority-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
-  const { bugs } = useBugs();
+  const { bugs, loading } = useBugs();
 
   const stats = {
     new: bugs.filter((b) => b.status === 'New').length,
@@ -40,6 +41,19 @@ export default function DashboardPage() {
 
   const getUser = (id?: string) => users.find((u) => u.id === id);
 
+  const StatCard = ({ title, value, icon, description }: { title: string, value: number, icon: React.ReactNode, description: string }) => (
+      <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            {icon}
+          </CardHeader>
+          <CardContent>
+            {loading ? <Skeleton className="h-8 w-1/4"/> : <div className="text-2xl font-bold">{value}</div>}
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </CardContent>
+        </Card>
+  )
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-start">
@@ -48,51 +62,15 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">An overview of your project's health.</p>
         </div>
         <Button asChild>
-            <Link href="/bugs">Create New Bug</Link>
+            <Link href="/bugs/new">Create New Bug</Link>
         </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bugs</CardTitle>
-            <Bug className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground">All bugs reported</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Bugs</CardTitle>
-            <CircleDot className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.new}</div>
-            <p className="text-xs text-muted-foreground">Awaiting triage</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Loader className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.inProgress}</div>
-            <p className="text-xs text-muted-foreground">Currently being worked on</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Bugs Fixed</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.fixed}</div>
-            <p className="text-xs text-muted-foreground">Ready for verification</p>
-          </CardContent>
-        </Card>
+        <StatCard title="Total Bugs" value={stats.total} icon={<Bug className="h-4 w-4 text-muted-foreground" />} description="All bugs reported" />
+        <StatCard title="New Bugs" value={stats.new} icon={<CircleDot className="h-4 w-4 text-muted-foreground" />} description="Awaiting triage" />
+        <StatCard title="In Progress" value={stats.inProgress} icon={<Loader className="h-4 w-4 text-muted-foreground" />} description="Currently being worked on" />
+        <StatCard title="Bugs Fixed" value={stats.fixed} icon={<CheckCircle className="h-4 w-4 text-muted-foreground" />} description="Ready for verification" />
       </div>
 
       <Card>
@@ -101,6 +79,11 @@ export default function DashboardPage() {
           <CardDescription>The latest bugs that need your attention.</CardDescription>
         </CardHeader>
         <CardContent>
+          {loading ? (
+             <div className="space-y-2">
+                {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -149,6 +132,7 @@ export default function DashboardPage() {
               })}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
     </div>
