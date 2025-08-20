@@ -146,7 +146,7 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label>Status</Label>
-                        <Select value={bug.status} onValueChange={handleStatusChange}>
+                        <Select value={bug.status} onValuechange={handleStatusChange}>
                             <SelectTrigger>
                                 <SelectValue>
                                     <BugStatusBadge status={bug.status} />
