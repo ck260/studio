@@ -20,9 +20,10 @@ import { Label } from '@/components/ui/label';
 import type { Bug, BugStatus, BugPriority, Comment } from '@/lib/types';
 
 
-export default function BugDetailsPage({ params: { id } }: { params: { id: string } }) {
-  const { bugs } = useBugs();
-  const bug = bugs.find((b) => b.id === id);
+export default function BugDetailsPage({ params }: { params: { id: string } }) {
+    const { id } = params;
+    const { bugs } = useBugs();
+    const bug = bugs.find((b) => b.id === id);
 
   if (!bug) {
       // Data might still be loading, or bug not found.
@@ -146,7 +147,7 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label>Status</Label>
-                        <Select value={bug.status} onValuechange={handleStatusChange}>
+                        <Select value={bug.status} onValueChange={handleStatusChange}>
                             <SelectTrigger>
                                 <SelectValue>
                                     <BugStatusBadge status={bug.status} />
