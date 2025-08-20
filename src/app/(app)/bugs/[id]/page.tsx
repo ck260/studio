@@ -20,8 +20,7 @@ import { Label } from '@/components/ui/label';
 import type { Bug, BugStatus, BugPriority, Comment } from '@/lib/types';
 
 
-export default function BugDetailsPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function BugDetailsPage({ params: { id } }: { params: { id: string } }) {
   const { bugs } = useBugs();
   const bug = bugs.find((b) => b.id === id);
 
