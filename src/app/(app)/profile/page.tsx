@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import type { User } from '@/lib/types';
 
 
 const profileFormSchema = z.object({
@@ -32,14 +33,15 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 // This is a placeholder component.
 // In a real app, you'd fetch user data from an auth context.
 export default function ProfilePage() {
-    const user = users[0]; // Using the first user as the current user for this example.
+    // In a real app, this would come from a context or API call.
+    const [currentUser, setCurrentUser] = React.useState<User>(users[0]);
     const { toast } = useToast();
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
         defaultValues: {
-            name: user.name,
-            email: user.email,
+            name: currentUser.name,
+            email: currentUser.email,
         },
     });
 
@@ -54,7 +56,13 @@ export default function ProfilePage() {
 
     const onSubmit = (data: ProfileFormValues) => {
         // In a real app, you would call an API to update the user data.
-        // For this demo, we'll just show a success message.
+        // For this demo, we'll update the local state to reflect the change.
+        setCurrentUser(prevUser => ({
+            ...prevUser,
+            name: data.name,
+            email: data.email,
+        }));
+
         console.log("Profile updated:", data);
         toast({
           title: "Profile Updated",
@@ -78,8 +86,8 @@ export default function ProfilePage() {
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
                                 <Avatar className="h-20 w-20">
-                                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                                    <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+                                    <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
                                 </Avatar>
                                 <div className="space-y-2">
                                     <Button type="button">Change Photo</Button>
