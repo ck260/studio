@@ -36,6 +36,7 @@ export default function ProfilePage() {
     // In a real app, this would come from a context or API call.
     const [currentUser, setCurrentUser] = React.useState<User>(users[0]);
     const { toast } = useToast();
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileFormSchema),
@@ -44,6 +45,13 @@ export default function ProfilePage() {
             email: currentUser.email,
         },
     });
+
+     React.useEffect(() => {
+        form.reset({
+            name: currentUser.name,
+            email: currentUser.email,
+        });
+    }, [currentUser, form]);
 
     const getInitials = (name: string | null | undefined) => {
         if (!name) return 'U';
@@ -55,20 +63,40 @@ export default function ProfilePage() {
     }
 
     const onSubmit = (data: ProfileFormValues) => {
-        // In a real app, you would call an API to update the user data.
-        // For this demo, we'll update the local state to reflect the change.
         setCurrentUser(prevUser => ({
             ...prevUser,
             name: data.name,
             email: data.email,
         }));
 
-        console.log("Profile updated:", data);
         toast({
           title: "Profile Updated",
           description: "Your changes have been saved successfully.",
         });
     }
+
+    const handlePhotoChangeClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const newAvatarUrl = reader.result as string;
+                setCurrentUser(prevUser => ({
+                    ...prevUser,
+                    avatarUrl: newAvatarUrl,
+                }));
+                toast({
+                  title: "Photo Updated",
+                  description: "Your new profile photo has been set.",
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div className="space-y-6 max-w-2xl mx-auto">
@@ -90,7 +118,14 @@ export default function ProfilePage() {
                                     <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
                                 </Avatar>
                                 <div className="space-y-2">
-                                    <Button type="button">Change Photo</Button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/png, image/jpeg, image/gif"
+                                        onChange={handleFileChange}
+                                    />
+                                    <Button type="button" onClick={handlePhotoChangeClick}>Change Photo</Button>
                                     <p className="text-sm text-muted-foreground">JPG, GIF or PNG. 1MB max.</p>
                                 </div>
                             </div>
