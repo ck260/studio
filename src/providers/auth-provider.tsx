@@ -5,6 +5,7 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { app, db } from '@/lib/firebase';
+import type { User as AppUser } from '@/lib/types';
 
 interface AuthContextType {
   user: User | null;
@@ -25,14 +26,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Here you could fetch additional user data from Firestore if needed
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
              // You can merge auth user with firestore user data
         }
+        setUser(firebaseUser); // Set the user from auth state
+      } else {
+        setUser(null);
       }
-      setUser(firebaseUser);
       setLoading(false);
     });
 
@@ -57,12 +59,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: fullName,
         email: firebaseUser.email,
         role: 'user'
-    });
+    } as AppUser);
 
-    // To make sure the display name is immediately available on the user object
-    await firebaseUser.reload();
-    setUser(auth.currentUser);
-
+    // The onAuthStateChanged listener will handle setting the user state.
+    // No need to call setUser here directly.
     return userCredential;
   };
 
