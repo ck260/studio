@@ -9,7 +9,7 @@ import { getAuth } from "firebase/auth";
 const firebaseConfig = {
   projectId: "bugsmash-96rb8",
   appId: "1:828716915274:web:60ce8a3f7b5dc74711e4b3",
-  storageBucket: "bugsmash-96rb8.appspot.com",
+  storageBucket: "bugsmash-96rb8.firebasestorage.app",
   apiKey: "AIzaSyCDrYTXJFr0FuXZmMNsYNLzV_7hAZ109bw",
   authDomain: "bugsmash-96rb8.firebaseapp.com",
   messagingSenderId: "828716915274"
