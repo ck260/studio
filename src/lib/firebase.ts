@@ -1,3 +1,4 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -9,8 +10,8 @@ import { getAuth } from "firebase/auth";
 const firebaseConfig = {
   projectId: "bugsmash-96rb8",
   appId: "1:828716915274:web:60ce8a3f7b5dc74711e4b3",
-  storageBucket: "bugsmash-96rb8.firebasestorage.app",
-  apiKey: "AIzaSyCDrYTXJFr0FuXZmMNsYNLzV_7hAZ109bw",
+  storageBucket: "bugsmash-96rb8.appspot.com",
+  apiKey: "AIzaSyA5S_gKYk52e1nI8hMv-5s7j3v_t1t4g7s",
   authDomain: "bugsmash-96rb8.firebaseapp.com",
   messagingSenderId: "828716915274"
 };
