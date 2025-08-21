@@ -2,9 +2,9 @@
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged, User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { app, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import type { User as AppUser } from '@/lib/types';
 
 interface AuthContextType {
@@ -16,8 +16,6 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const auth = getAuth(app);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -54,12 +52,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Create a user document in Firestore
     const userDocRef = doc(db, 'users', firebaseUser.uid);
-    await setDoc(userDocRef, {
+    const appUser: AppUser = {
         id: firebaseUser.uid,
         name: fullName,
-        email: firebaseUser.email,
+        email: firebaseUser.email!,
+        avatarUrl: '', // Default avatar, or generate one
         role: 'user'
-    } as AppUser);
+    };
+    await setDoc(userDocRef, appUser);
 
     // The onAuthStateChanged listener will handle setting the user state.
     // No need to call setUser here directly.
