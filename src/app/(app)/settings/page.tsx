@@ -4,13 +4,22 @@
 import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 // This is a placeholder component for a settings page.
 export default function SettingsPage() {
+    const { toast } = useToast();
+
+    const handleSave = (section: string) => {
+        toast({
+            title: "Settings Saved",
+            description: `Your ${section} settings have been updated.`,
+        });
+    }
+
     return (
         <div className="space-y-6 max-w-2xl mx-auto">
              <div>
@@ -50,7 +59,7 @@ export default function SettingsPage() {
                         </Select>
                     </div>
                     <div className="flex justify-end">
-                        <Button>Save General</Button>
+                        <Button onClick={() => handleSave('General')}>Save General</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -75,7 +84,7 @@ export default function SettingsPage() {
                         <Switch id="push-notifications" />
                     </div>
                     <div className="flex justify-end">
-                        <Button>Save Notifications</Button>
+                        <Button onClick={() => handleSave('Notification')}>Save Notifications</Button>
                     </div>
                 </CardContent>
             </Card>
