@@ -1,10 +1,11 @@
+
 rules_version = '2';
 
-// Craft rules that will lock down your database
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Allow read/write access to all documents for prototyping
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
   }
 }
