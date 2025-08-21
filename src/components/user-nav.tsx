@@ -1,6 +1,7 @@
 
 "use client"
 
+import * as React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,16 +15,32 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { users } from '@/lib/data';
+import type { User } from '@/lib/types';
 
-// This is a placeholder component.
-// In a real app, you'd fetch user data.
+
 export function UserNav() {
   const router = useRouter();
-  const user = {
-    name: 'Alice Johnson',
-    email: 'alice@example.com',
-    avatarUrl: 'https://i.pravatar.cc/150?u=user-1'
-  }
+  const [user, setUser] = React.useState<User>(users[0]);
+
+  React.useEffect(() => {
+    const updateUserFromStorage = () => {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            setUser(JSON.parse(storedUser));
+        }
+    };
+    
+    updateUserFromStorage();
+
+    // Listen for changes from other tabs/windows or our custom event
+    window.addEventListener('storage', updateUserFromStorage);
+
+    return () => {
+        window.removeEventListener('storage', updateUserFromStorage);
+    }
+  }, []);
+
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
