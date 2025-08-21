@@ -2,10 +2,10 @@
 "use client"
 
 import * as React from 'react';
-import { useBugs, useBugMutations } from '@/hooks/use-bugs';
-import { useComments, useCommentMutations } from '@/hooks/use-comments';
+import { useBugs } from '@/hooks/use-bugs';
+import { useComments } from '@/hooks/use-comments';
 import { users } from '@/lib/data';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
@@ -17,11 +17,11 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import type { Bug, BugStatus, BugPriority, Comment } from '@/lib/types';
+import type { Bug, BugStatus, BugPriority } from '@/lib/types';
 
 
 export default function BugDetailsPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+    const id = params.id;
     const { bugs } = useBugs();
     const bug = bugs.find((b) => b.id === id);
 
@@ -211,4 +211,24 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
       </div>
     </div>
   );
+}
+
+const useBugMutations = () => {
+    const addBug = async (newBug: Omit<Bug, 'id' | 'createdAt' | 'updatedAt'>) => {
+        console.log("Adding bug:", newBug)
+    };
+    
+    const updateBug = async (bugId: string, updates: Partial<Bug>) => {
+        console.log("Updating bug:", bugId, updates)
+    };
+
+    return { addBug, updateBug };
+}
+
+const useCommentMutations = () => {
+    const addComment = async (newComment: Omit<Comment, 'id' | 'createdAt'>) => {
+        console.log("Adding comment:", newComment)
+    }
+    
+    return { addComment };
 }

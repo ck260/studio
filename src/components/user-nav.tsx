@@ -13,10 +13,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // This is a placeholder component.
 // In a real app, you'd fetch user data.
 export function UserNav() {
+  const router = useRouter();
   const user = {
     name: 'Alice Johnson',
     email: 'alice@example.com',
@@ -30,6 +32,12 @@ export function UserNav() {
       return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
+  }
+  
+  const handleLogout = () => {
+    // In a real app, you'd clear the user's session here.
+    // For this demo, we'll just redirect to the login page.
+    router.push('/login');
   }
 
   return (
@@ -62,7 +70,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout}>
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
