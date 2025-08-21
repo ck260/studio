@@ -2,6 +2,17 @@
 
 This is a Next.js application built with Firebase Studio. It's a bug tracking system that uses Firebase Firestore for its database.
 
+## Technologies Used
+
+This project is built with the following technologies:
+- **Framework**: [Next.js](https://nextjs.org/) (using the App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **UI Library**: [React](https://react.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
+- **Database**: [Firebase Firestore](https://firebase.google.com/docs/firestore)
+- **Generative AI**: [Genkit](https://firebase.google.com/docs/genkit)
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed on your local machine:
