@@ -63,10 +63,10 @@ export function UserNav() {
              <Link href="/profile">Profile</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-             <Link href="/dashboard">Billing</Link>
+             <Link href="/billing">Billing</Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-             <Link href="/dashboard">Settings</Link>
+             <Link href="/settings">Settings</Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

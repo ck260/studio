@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Bug, LayoutDashboard, Settings, FileText } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter } from '@/components/ui/sidebar';
@@ -46,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <SidebarMenu>
                  <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link href="/dashboard">
+                  <Link href="/settings">
                     <Settings />
                     Settings
                   </Link>
