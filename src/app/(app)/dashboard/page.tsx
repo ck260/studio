@@ -62,7 +62,7 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">An overview of your project's health.</p>
         </div>
         <Button asChild>
-            <Link href="/bugs/new">Create New Bug</Link>
+            <Link href="/bugs">Create New Bug</Link>
         </Button>
       </div>
 
