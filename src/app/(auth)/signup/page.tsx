@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { useAuth } from '@/hooks/use-auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
@@ -25,7 +24,6 @@ const signupFormSchema = z.object({
 type SignupFormValues = z.infer<typeof signupFormSchema>;
 
 export default function SignupPage() {
-  const { signup } = useAuth();
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -42,14 +40,16 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormValues) => {
     setLoading(true);
     setError(null);
-    try {
-      await signup(data.email, data.password, data.fullName);
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // In a real app, you'd call your auth service here.
+    // For this demo, we'll just redirect on any input.
+    if (data.email && data.password) {
+        router.push('/dashboard');
+    } else {
+        setError("Could not create account. Please try again.")
     }
+    setLoading(false);
   };
 
   return (

@@ -12,19 +12,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { useAuth } from '@/hooks/use-auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
 const loginFormSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
+  password: z.string().min(1, "Password is required."),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export default function LoginPage() {
-  const { login } = useAuth();
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -40,14 +38,16 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
     setError(null);
-    try {
-      await login(data.email, data.password);
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoading(false);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // In a real app, you'd call your auth service here.
+    // For this demo, we'll just redirect on any input.
+    if (data.email && data.password) {
+        router.push('/dashboard');
+    } else {
+        setError("Invalid credentials. Please try again.")
     }
+    setLoading(false);
   };
 
   return (
