@@ -4,11 +4,32 @@
 import * as React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 // This is a placeholder component for a billing page.
 export default function BillingPage() {
+    const { toast } = useToast();
+
+    const handlePlanChange = () => {
+        toast({
+            title: "Plan Changed",
+            description: "Your subscription plan has been updated.",
+        });
+    }
+
+    const handleSubscriptionCancel = () => {
+        toast({
+            title: "Subscription Canceled",
+            description: "Your subscription has been canceled and will not renew.",
+            variant: "destructive",
+        });
+    }
+
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
              <div>
@@ -33,8 +54,63 @@ export default function BillingPage() {
                             </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline">Change Plan</Button>
-                            <Button variant="destructive">Cancel Subscription</Button>
+                             <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">Change Plan</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Change Subscription Plan</DialogTitle>
+                                        <DialogDescription>Select a new plan that fits your needs.</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="py-4">
+                                        <RadioGroup defaultValue="pro">
+                                            <div className="flex items-center justify-between p-4 border rounded-md">
+                                                <div>
+                                                    <Label htmlFor="free" className="font-semibold">Free Plan</Label>
+                                                    <p className="text-sm text-muted-foreground">$0/month - Basic features</p>
+                                                </div>
+                                                <RadioGroupItem value="free" id="free" />
+                                            </div>
+                                             <div className="flex items-center justify-between p-4 border rounded-md border-primary ring-2 ring-primary">
+                                                <div>
+                                                    <Label htmlFor="pro" className="font-semibold">Pro Plan</Label>
+                                                     <p className="text-sm text-muted-foreground">$29/month - Advanced features</p>
+                                                </div>
+                                                <RadioGroupItem value="pro" id="pro" />
+                                            </div>
+                                             <div className="flex items-center justify-between p-4 border rounded-md">
+                                                <div>
+                                                    <Label htmlFor="enterprise" className="font-semibold">Enterprise</Label>
+                                                     <p className="text-sm text-muted-foreground">Contact Us - For large teams</p>
+                                                </div>
+                                                <RadioGroupItem value="enterprise" id="enterprise" />
+                                            </div>
+                                        </RadioGroup>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button onClick={handlePlanChange}>Confirm Change</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive">Cancel Subscription</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. Your subscription will be canceled at the end of the current billing period.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Keep Subscription</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleSubscriptionCancel} className="bg-destructive hover:bg-destructive/90">Confirm Cancellation</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </CardContent>
                 </Card>
