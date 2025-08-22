@@ -1,8 +1,22 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    // Allow public read access to bugs and comments for this demo
+    match /bugs/{bugId} {
+      allow read, write: if true;
+    }
+
+    match /comments/{commentId} {
+      allow read, write: if true;
+    }
+    
+    // Users can be created by anyone (for sign-up)
+    // In production, you'd likely want more secure rules
+    match /users/{userId} {
+      allow read, create: if true;
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
