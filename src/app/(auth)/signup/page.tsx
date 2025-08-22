@@ -14,8 +14,6 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import { db } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
 
 const signupFormSchema = z.object({
   fullName: z.string().min(1, "Full name is required."),
@@ -44,21 +42,13 @@ export default function SignupPage() {
     setError(null);
     try {
       // In a real app, you would use Firebase Auth to create a user.
-      // For this demo, we'll add the user details to a 'users' collection.
-      const usersCollection = collection(db, "users");
-      await addDoc(usersCollection, {
-        name: data.fullName,
-        email: data.email,
-        role: 'user', // Default role for new sign-ups
-        avatarUrl: `https://i.pravatar.cc/150?u=${data.email}`, // Generate a placeholder avatar
-      });
-      
-      // Simulate login and redirect
+      // For this demo, we'll just simulate a successful sign-up and redirect.
+      console.log("Simulating account creation with:", data);
       await new Promise(resolve => setTimeout(resolve, 1000));
       router.push('/dashboard');
 
     } catch (e) {
-      console.error("Error adding document: ", e);
+      console.error("Error during sign-up simulation: ", e);
       setError("Could not create account. Please try again.");
     } finally {
       setLoading(false);
