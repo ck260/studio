@@ -28,6 +28,12 @@ type PaymentHistoryItem = {
     amount: number;
 };
 
+type PaymentMethod = {
+    last4: string;
+    expiry: string;
+};
+
+
 const plans: Record<Plan['id'], Plan> = {
     free: { id: 'free', name: 'Free Plan', price: 0, description: '$0/month', features: 'Basic features' },
     pro: { id: 'pro', name: 'Pro Plan', price: 29, description: '$29/month', features: 'Advanced features' },
@@ -48,6 +54,9 @@ export default function BillingPage() {
     const [currentPlan, setCurrentPlan] = React.useState<Plan>(plans.pro);
     const [paymentHistory, setPaymentHistory] = React.useState<PaymentHistoryItem[]>(initialPaymentHistory);
     const [isSubscribed, setIsSubscribed] = React.useState(true);
+    const [paymentMethod, setPaymentMethod] = React.useState<PaymentMethod>({ last4: '1234', expiry: '12/2028' });
+    const [cardDetails, setCardDetails] = React.useState({ number: '4242 4242 4242 1234', expiry: '12 / 28', cvc: '567' });
+
 
     const renewalDate = new Date();
     renewalDate.setFullYear(renewalDate.getFullYear() + 1);
@@ -85,6 +94,10 @@ export default function BillingPage() {
     }
 
     const handlePaymentUpdate = () => {
+        setPaymentMethod({
+            last4: cardDetails.number.slice(-4),
+            expiry: cardDetails.expiry.replace(' / ', '/'),
+        });
         toast({
             title: "Payment Method Updated",
             description: "Your new payment method has been saved.",
@@ -188,8 +201,8 @@ export default function BillingPage() {
                         <div className="flex items-center gap-3">
                              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="32" viewBox="0 0 48 32" className="h-8"><path fill="#3F64E6" d="M35 0H13C5.82 0 0 5.82 0 13v6c0 7.18 5.82 13 13 13h22c7.18 0 13-5.82 13-13v-6C48 5.82 42.18 0 35 0z"></path><path fill="#fff" d="M14 16.5c0-3.03 2.47-5.5 5.5-5.5s5.5 2.47 5.5 5.5S22.53 22 19.5 22S14 19.53 14 16.5zm6.5-1.15c.34-.34.34-.89 0-1.23a.87.87 0 00-1.23 0l-1.92 1.92-1.07-1.07a.87.87 0 00-1.23 0 .87.87 0 000 1.23l1.7 1.7a.87.87 0 001.23 0l2.52-2.55zm-8.85 4.35H27a1 1 0 100-2H11.65a1 1 0 100 2z"></path></svg>
                             <div>
-                                <p className="font-semibold">Visa ending in 1234</p>
-                                <p className="text-sm text-muted-foreground">Expires 12/2028</p>
+                                <p className="font-semibold">Visa ending in {paymentMethod.last4}</p>
+                                <p className="text-sm text-muted-foreground">Expires {paymentMethod.expiry}</p>
                             </div>
                         </div>
                         <Dialog open={isPaymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
@@ -204,16 +217,16 @@ export default function BillingPage() {
                                 <div className="space-y-4 py-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="card-number">Card Number</Label>
-                                        <Input id="card-number" placeholder="0000 0000 0000 0000" defaultValue="4242 4242 4242 1234" />
+                                        <Input id="card-number" placeholder="0000 0000 0000 0000" value={cardDetails.number} onChange={(e) => setCardDetails({...cardDetails, number: e.target.value})} />
                                     </div>
                                     <div className="grid grid-cols-3 gap-4">
                                         <div className="space-y-2 col-span-2">
                                             <Label htmlFor="expiry">Expiry</Label>
-                                            <Input id="expiry" placeholder="MM / YY" defaultValue="12 / 28" />
+                                            <Input id="expiry" placeholder="MM / YY" value={cardDetails.expiry} onChange={(e) => setCardDetails({...cardDetails, expiry: e.target.value})} />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="cvc">CVC</Label>
-                                            <Input id="cvc" placeholder="123" defaultValue="567" />
+                                            <Input id="cvc" placeholder="123" value={cardDetails.cvc} onChange={(e) => setCardDetails({...cardDetails, cvc: e.target.value})} />
                                         </div>
                                     </div>
                                 </div>
