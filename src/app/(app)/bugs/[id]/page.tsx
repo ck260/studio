@@ -2,8 +2,8 @@
 "use client"
 
 import * as React from 'react';
-import { useBugs } from '@/hooks/use-bugs';
-import { useComments } from '@/hooks/use-comments';
+import { useBugs, useBugMutations } from '@/hooks/use-bugs';
+import { useComments, useCommentMutations } from '@/hooks/use-comments';
 import { users } from '@/lib/data';
 import { notFound, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -211,24 +211,4 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
       </div>
     </div>
   );
-}
-
-const useBugMutations = () => {
-    const addBug = async (newBug: Omit<Bug, 'id' | 'createdAt' | 'updatedAt'>) => {
-        console.log("Adding bug:", newBug)
-    };
-    
-    const updateBug = async (bugId: string, updates: Partial<Bug>) => {
-        console.log("Updating bug:", bugId, updates)
-    };
-
-    return { addBug, updateBug };
-}
-
-const useCommentMutations = () => {
-    const addComment = async (newComment: Omit<Comment, 'id' | 'createdAt'>) => {
-        console.log("Adding comment:", newComment)
-    }
-    
-    return { addComment };
 }
