@@ -10,19 +10,71 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { format } from 'date-fns';
 
-// This is a placeholder component for a billing page.
+type Plan = {
+    id: 'free' | 'pro' | 'enterprise';
+    name: string;
+    price: number;
+    description: string;
+    features: string;
+};
+
+type PaymentHistoryItem = {
+    id: string;
+    date: Date;
+    description: string;
+    amount: number;
+};
+
+const plans: Record<Plan['id'], Plan> = {
+    free: { id: 'free', name: 'Free Plan', price: 0, description: '$0/month', features: 'Basic features' },
+    pro: { id: 'pro', name: 'Pro Plan', price: 29, description: '$29/month', features: 'Advanced features' },
+    enterprise: { id: 'enterprise', name: 'Enterprise', price: 0, description: 'Contact Us', features: 'For large teams' },
+};
+
+const initialPaymentHistory: PaymentHistoryItem[] = [
+    { id: 'tx_3', date: new Date(2024, 8, 21), description: 'Pro Plan - Monthly', amount: 29.00 },
+    { id: 'tx_2', date: new Date(2024, 9, 21), description: 'Pro Plan - Monthly', amount: 29.00 },
+    { id: 'tx_1', date: new Date(2024, 10, 21), description: 'Pro Plan - Monthly', amount: 29.00 },
+];
+
 export default function BillingPage() {
     const { toast } = useToast();
+    const [isPlanDialogOpen, setPlanDialogOpen] = React.useState(false);
+    const [selectedPlanId, setSelectedPlanId] = React.useState<Plan['id']>('pro');
+    const [currentPlan, setCurrentPlan] = React.useState<Plan>(plans.pro);
+    const [paymentHistory, setPaymentHistory] = React.useState<PaymentHistoryItem[]>(initialPaymentHistory);
+    const [isSubscribed, setIsSubscribed] = React.useState(true);
+
+    const renewalDate = new Date();
+    renewalDate.setFullYear(renewalDate.getFullYear() + 1);
 
     const handlePlanChange = () => {
+        const newPlan = plans[selectedPlanId];
+        setCurrentPlan(newPlan);
+
+        if (newPlan.price > 0) {
+            const newPayment: PaymentHistoryItem = {
+                id: `tx_${paymentHistory.length + 1}`,
+                date: new Date(),
+                description: `${newPlan.name} - Monthly`,
+                amount: newPlan.price,
+            }
+            setPaymentHistory(prev => [newPayment, ...prev]);
+        }
+        
+        setIsSubscribed(true); // Re-subscribe if they choose a plan
+        
         toast({
             title: "Plan Changed",
-            description: "Your subscription plan has been updated.",
+            description: `Your subscription plan has been updated to ${newPlan.name}.`,
         });
+        setPlanDialogOpen(false);
     }
 
     const handleSubscriptionCancel = () => {
+        setIsSubscribed(false);
         toast({
             title: "Subscription Canceled",
             description: "Your subscription has been canceled and will not renew.",
@@ -40,21 +92,30 @@ export default function BillingPage() {
                 <Card className="md:col-span-2">
                     <CardHeader>
                         <CardTitle>Current Plan</CardTitle>
-                        <CardDescription>You are currently on the Pro plan.</CardDescription>
+                        <CardDescription>{isSubscribed ? `You are currently on the ${currentPlan.name}.` : "You do not have an active subscription."}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                       {isSubscribed ? (
+                         <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
                             <div>
-                                <h3 className="font-semibold">Pro Plan</h3>
-                                <p className="text-sm text-muted-foreground">Renews on December 21, 2024</p>
+                                <h3 className="font-semibold">{currentPlan.name}</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {currentPlan.price > 0 ? `Renews on ${format(renewalDate, "MMMM dd, yyyy")}`: "Free forever"}
+                                </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-2xl font-bold">$29</p>
+                                <p className="text-2xl font-bold">${currentPlan.price}</p>
                                 <p className="text-sm text-muted-foreground">per month</p>
                             </div>
                         </div>
+                       ) : (
+                           <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-secondary/50 text-center">
+                                <h3 className="font-semibold">No Active Plan</h3>
+                                <p className="text-sm text-muted-foreground">Choose a plan to get started.</p>
+                           </div>
+                       )}
                         <div className="flex justify-end gap-2">
-                             <Dialog>
+                             <Dialog open={isPlanDialogOpen} onOpenChange={setPlanDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button variant="outline">Change Plan</Button>
                                 </DialogTrigger>
@@ -64,31 +125,24 @@ export default function BillingPage() {
                                         <DialogDescription>Select a new plan that fits your needs.</DialogDescription>
                                     </DialogHeader>
                                     <div className="py-4">
-                                        <RadioGroup defaultValue="pro">
-                                            <div className="flex items-center justify-between p-4 border rounded-md">
-                                                <div>
-                                                    <Label htmlFor="free" className="font-semibold">Free Plan</Label>
-                                                    <p className="text-sm text-muted-foreground">$0/month - Basic features</p>
+                                        <RadioGroup value={selectedPlanId} onValueChange={(value: Plan['id']) => setSelectedPlanId(value)}>
+                                            {(Object.values(plans) as Plan[]).map(plan => (
+                                                <div 
+                                                    key={plan.id}
+                                                    className={`flex items-center justify-between p-4 border rounded-md cursor-pointer ${selectedPlanId === plan.id ? 'border-primary ring-2 ring-primary' : ''}`}
+                                                    onClick={() => setSelectedPlanId(plan.id)}
+                                                >
+                                                    <div>
+                                                        <Label htmlFor={plan.id} className="font-semibold cursor-pointer">{plan.name}</Label>
+                                                        <p className="text-sm text-muted-foreground">{plan.description} - {plan.features}</p>
+                                                    </div>
+                                                    <RadioGroupItem value={plan.id} id={plan.id} />
                                                 </div>
-                                                <RadioGroupItem value="free" id="free" />
-                                            </div>
-                                             <div className="flex items-center justify-between p-4 border rounded-md border-primary ring-2 ring-primary">
-                                                <div>
-                                                    <Label htmlFor="pro" className="font-semibold">Pro Plan</Label>
-                                                     <p className="text-sm text-muted-foreground">$29/month - Advanced features</p>
-                                                </div>
-                                                <RadioGroupItem value="pro" id="pro" />
-                                            </div>
-                                             <div className="flex items-center justify-between p-4 border rounded-md">
-                                                <div>
-                                                    <Label htmlFor="enterprise" className="font-semibold">Enterprise</Label>
-                                                     <p className="text-sm text-muted-foreground">Contact Us - For large teams</p>
-                                                </div>
-                                                <RadioGroupItem value="enterprise" id="enterprise" />
-                                            </div>
+                                            ))}
                                         </RadioGroup>
                                     </div>
                                     <DialogFooter>
+                                        <Button onClick={() => setPlanDialogOpen(false)} variant="ghost">Cancel</Button>
                                         <Button onClick={handlePlanChange}>Confirm Change</Button>
                                     </DialogFooter>
                                 </DialogContent>
@@ -96,7 +150,7 @@ export default function BillingPage() {
 
                              <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant="destructive">Cancel Subscription</Button>
+                                    <Button variant="destructive" disabled={!isSubscribed}>Cancel Subscription</Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
@@ -146,23 +200,20 @@ export default function BillingPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b">
-                                <td className="py-2">Nov 21, 2024</td>
-                                <td className="py-2">Pro Plan - Monthly</td>
-                                <td className="py-2 text-right font-medium">$29.00</td>
-                            </tr>
-                            <tr className="border-b">
-                                <td className="py-2">Oct 21, 2024</td>
-                                <td className="py-2">Pro Plan - Monthly</td>
-                                <td className="py-2 text-right font-medium">$29.00</td>
-                            </tr>
-                            <tr className="border-b">
-                                <td className="py-2">Sep 21, 2024</td>
-                                <td className="py-2">Pro Plan - Monthly</td>
-                                <td className="py-2 text-right font-medium">$29.00</td>
-                            </tr>
+                            {paymentHistory.map(item => (
+                                <tr key={item.id} className="border-b">
+                                    <td className="py-2">{format(item.date, "MMM dd, yyyy")}</td>
+                                    <td className="py-2">{item.description}</td>
+                                    <td className="py-2 text-right font-medium">${item.amount.toFixed(2)}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
+                     {!isSubscribed && paymentHistory.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                            No payment history to display.
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
