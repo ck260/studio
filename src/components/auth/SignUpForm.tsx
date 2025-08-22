@@ -59,6 +59,7 @@ export default function SignUpForm() {
 
     } catch (error: any) {
         let errorMessage = "An unexpected error occurred. Please try again.";
+        // See https://firebase.google.com/docs/auth/admin/errors for a full list of error codes.
         switch (error.code) {
             case 'auth/email-already-in-use':
                 errorMessage = 'This email address is already in use by another account.';
@@ -71,7 +72,7 @@ export default function SignUpForm() {
                 break;
         }
         setError(errorMessage);
-        console.error("Firebase Auth Error:", error);
+        console.error("Firebase Auth Error:", error.code, error.message);
     } finally {
       setLoading(false);
     }

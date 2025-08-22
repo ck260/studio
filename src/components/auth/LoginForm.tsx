@@ -44,6 +44,7 @@ export default function LoginForm() {
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = "An unexpected error occurred. Please try again.";
+      // See https://firebase.google.com/docs/auth/admin/errors for a full list of error codes.
       switch (error.code) {
           case 'auth/user-not-found':
           case 'auth/wrong-password':
@@ -55,7 +56,7 @@ export default function LoginForm() {
               break;
       }
       setError(errorMessage);
-      console.error("Firebase Auth Error:", error);
+      console.error("Firebase Auth Error:", error.code, error.message);
     } finally {
       setLoading(false);
     }
