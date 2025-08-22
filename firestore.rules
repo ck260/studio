@@ -1,9 +1,27 @@
+
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read and write access for all paths
-    match /{document=**} {
+  
+    // Allow public read/write access to bugs and comments for this demo
+    match /bugs/{bugId} {
       allow read, write: if true;
+    }
+
+    match /comments/{commentId} {
+      allow read, write: if true;
+    }
+
+    // Allow users to be created (signup)
+    match /users/{userId} {
+      allow read, create: if true;
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
