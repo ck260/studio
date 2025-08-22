@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
+import { Input } from '@/components/ui/input';
 
 type Plan = {
     id: 'free' | 'pro' | 'enterprise';
@@ -42,6 +43,7 @@ const initialPaymentHistory: PaymentHistoryItem[] = [
 export default function BillingPage() {
     const { toast } = useToast();
     const [isPlanDialogOpen, setPlanDialogOpen] = React.useState(false);
+    const [isPaymentDialogOpen, setPaymentDialogOpen] = React.useState(false);
     const [selectedPlanId, setSelectedPlanId] = React.useState<Plan['id']>('pro');
     const [currentPlan, setCurrentPlan] = React.useState<Plan>(plans.pro);
     const [paymentHistory, setPaymentHistory] = React.useState<PaymentHistoryItem[]>(initialPaymentHistory);
@@ -81,6 +83,15 @@ export default function BillingPage() {
             variant: "destructive",
         });
     }
+
+    const handlePaymentUpdate = () => {
+        toast({
+            title: "Payment Method Updated",
+            description: "Your new payment method has been saved.",
+        });
+        setPaymentDialogOpen(false);
+    }
+
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -181,7 +192,37 @@ export default function BillingPage() {
                                 <p className="text-sm text-muted-foreground">Expires 12/2028</p>
                             </div>
                         </div>
-                        <Button variant="outline" className="w-full">Update Payment Method</Button>
+                        <Dialog open={isPaymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="w-full">Update Payment Method</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Update Payment Method</DialogTitle>
+                                    <DialogDescription>Enter your new card details. This is a simulation.</DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="card-number">Card Number</Label>
+                                        <Input id="card-number" placeholder="0000 0000 0000 0000" defaultValue="4242 4242 4242 1234" />
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="space-y-2 col-span-2">
+                                            <Label htmlFor="expiry">Expiry</Label>
+                                            <Input id="expiry" placeholder="MM / YY" defaultValue="12 / 28" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="cvc">CVC</Label>
+                                            <Input id="cvc" placeholder="123" defaultValue="567" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button onClick={() => setPaymentDialogOpen(false)} variant="ghost">Cancel</Button>
+                                    <Button onClick={handlePaymentUpdate}>Update Card</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardContent>
                 </Card>
             </div>
