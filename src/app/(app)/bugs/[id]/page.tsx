@@ -21,9 +21,8 @@ import type { Bug, BugStatus, BugPriority } from '@/lib/types';
 
 
 export default function BugDetailsPage({ params }: { params: { id: string } }) {
-    const id = params.id;
     const { bugs } = useBugs();
-    const bug = bugs.find((b) => b.id === id);
+    const bug = bugs.find((b) => b.id === params.id);
 
   if (!bug) {
       // Data might still be loading, or bug not found.
@@ -66,9 +65,10 @@ function BugDetailsContent({ bug }: { bug: Bug }) {
     const handleCommentSubmit = async () => {
         if (!newComment.trim()) return;
 
+        // In a real app, you'd get the current user's ID from an auth context
         const newCommentObject = {
             bugId: bug.id,
-            authorId: users[0].id, // Assume current user
+            authorId: users[0].id, 
             content: newComment,
         };
 
