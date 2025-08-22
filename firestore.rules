@@ -1,22 +1,31 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to bugs and comments for this demo
-    match /bugs/{bugId} {
-      allow read, write: if true;
+  
+    // Helper function to check for authentication
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    match /comments/{commentId} {
-      allow read, write: if true;
+    // Users collection: Users can only access their own document.
+    match /users/{uid} {
+      allow read, update, delete: if isAuthenticated() && request.auth.uid == uid;
+      allow create: if isAuthenticated();
     }
-    
-    // Users can be created by anyone (for sign-up)
-    // In production, you'd likely want more secure rules
-    match /users/{userId} {
-      allow read, create: if true;
-      allow update, delete: if request.auth != null && request.auth.uid == userId;
+
+    // Bugs collection: Authenticated users can create/read, but only the reporter can update/delete.
+    match /bugs/{bugId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.reporterId == request.auth.uid;
+    }
+
+    // Comments collection: Authenticated users can create/read, but only the author can update/delete.
+    match /comments/{commentId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.authorId == request.auth.uid;
     }
   }
 }
